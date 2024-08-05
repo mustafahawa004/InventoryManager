@@ -27,6 +27,7 @@ export default function Home() {
   };
 
   const addItem = async (item) => {
+    console.log("Adding item:", item);
     const docRef = doc(collection(firestore, 'inventory'), item);
     const docSnap = await getDoc(docRef);
 
