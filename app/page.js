@@ -1,17 +1,19 @@
 'use client'
-import Image from 'next/image'
 import { useState, useEffect } from "react";
 import { firestore } from '@/firebase';
-import { Box, Typography, Stack, TextField, Modal, Button, IconButton } from "@mui/material";
-import { Search as SearchIcon, Add as AddIcon } from '@mui/icons-material'; // Import Add icon
+import { Box, Typography, Stack, TextField, Modal, Button, IconButton, Drawer } from "@mui/material";
+import { Search as SearchIcon, Add as AddIcon, Close as CloseIcon } from '@mui/icons-material';
 import { deleteDoc, setDoc, doc, getDoc, collection, getDocs, query } from 'firebase/firestore';
 
 export default function Home() {
   const [inventory, setInventory] = useState([]);
-  const [open, setOpen] = useState(false);
-  const [itemName, setItemName] = useState('');
+  const [open, setOpen] = useState(false); 
+  const [itemName, setItemName] = useState(''); 
   const [searchTerm, setSearchTerm] = useState('');
+  const [recipe, setRecipe] = useState(null);
+  const [loading, setLoading] = useState(false);
   const [searchVisible, setSearchVisible] = useState(false);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false); 
 
   const updateInventory = async () => {
     const snapshot = query(collection(firestore, 'inventory'));
@@ -55,16 +57,54 @@ export default function Home() {
     await updateInventory();
   };
 
+  const generateRecipe = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch('/api/openai', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ ingredients: inventory.map(({ name }) => name) }),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setRecipe(data.recipe);
+        setIsDrawerOpen(true);  
+      } else {
+        console.error(data.error);
+      }
+    } catch (error) {
+      console.error('Error generating recipe:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     updateInventory();
   }, []);
 
-  const handleOpen = () => setOpen(true);
-  const handleClose = () => setOpen(false);
+  const handleOpen = () => setOpen(true); 
+  const handleClose = () => setOpen(false); 
 
   const filteredInventory = inventory.filter(item =>
     item.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const toggleDrawer = (open) => () => {
+    setIsDrawerOpen(open);  
+  };
+
+  const cleanRecipeText = (text) => {
+    return text
+      .replace(/###/g, '') 
+      .replace(/#/g, '') 
+      .replace(/\*\*\*(.*?)\*\*\*/g, '<strong>$1</strong>') 
+      .replace(/\*{1,2}(.*?)\*{1,2}/g, '<strong>$1</strong>') 
+      .replace(/^- /gm, '') 
+      .replace(/\n/g, '<br>'); 
+  };
 
   return (
     <Box
@@ -111,17 +151,18 @@ export default function Home() {
           </Stack>
         </Box>
       </Modal>
-      <Box border="1px solid #333">
+
+      <Box border="1px solid #333" mb={3}>
         <Box
           width="800px"
           height="100px"
           bgcolor="#ADD8E6"
-          alignItems="center" 
-          justifyContent="space-between" 
+          alignItems="center"
+          justifyContent="space-between"
           display="flex"
           paddingX={2}
         >
-          <Typography variant="h2" color='#333'>Inventory Items</Typography>
+          <Typography variant="h2" color='#333'>Pantry</Typography>
           <Stack direction="row" spacing={1}>
             <IconButton onClick={handleOpen}>
               <AddIcon />
@@ -143,7 +184,7 @@ export default function Home() {
           </Box>
         )}
         <Stack width="800px" height="300px" spacing={2} overflow="auto">
-          {filteredInventory.map(({name, quantity}) =>(
+          {filteredInventory.map(({ name, quantity }) => (
             <Box
               key={name}
               width="100%"
@@ -182,6 +223,36 @@ export default function Home() {
           ))}
         </Stack>
       </Box>
+
+      <Button variant="contained" onClick={generateRecipe} disabled={loading}>
+        {loading ? "Generating..." : "Generate Recipe"}
+      </Button>
+
+      <Drawer anchor="right" open={isDrawerOpen} onClose={toggleDrawer(false)}>
+        <Box
+          width="400px"
+          height="100%"
+          p={3}
+          bgcolor="#f9f9f9"
+          borderRadius="8px"
+          boxShadow={3}
+          style={{ overflowY: 'auto', lineHeight: 1.6 }}  
+        >
+          <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
+            <Typography variant="h4" fontWeight="bold">
+              Generated Recipe
+            </Typography>
+            <IconButton onClick={toggleDrawer(false)}>
+              <CloseIcon />
+            </IconButton>
+          </Stack>
+
+          <hr />
+          {recipe && (
+            <Box dangerouslySetInnerHTML={{ __html: cleanRecipeText(recipe) }} />
+          )}
+        </Box>
+      </Drawer>
     </Box>
   );
 }
