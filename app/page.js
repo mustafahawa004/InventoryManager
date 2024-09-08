@@ -1,7 +1,7 @@
 'use client'
 import { useState, useEffect } from "react";
 import { firestore } from '@/firebase';
-import { Box, Typography, Stack, TextField, Modal, Button, IconButton, Drawer } from "@mui/material";
+import { Box, Typography, Stack, TextField, Modal, Button, IconButton, Drawer, useMediaQuery } from "@mui/material";
 import { Search as SearchIcon, Add as AddIcon, Close as CloseIcon } from '@mui/icons-material';
 import { deleteDoc, setDoc, doc, getDoc, collection, getDocs, query } from 'firebase/firestore';
 
@@ -14,6 +14,9 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [searchVisible, setSearchVisible] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false); 
+  
+  // useMediaQuery to check screen size (for responsive design)
+  const isMobile = useMediaQuery('(max-width: 768px)'); 
 
   const updateInventory = async () => {
     const snapshot = query(collection(firestore, 'inventory'));
@@ -115,7 +118,9 @@ export default function Home() {
       alignItems="center"
       flexDirection="column"
       gap={2}
+      padding={isMobile ? 2 : 4}
     >
+      {/* Modal for Adding Item */}
       <Modal open={open} onClose={handleClose}>
         <Box
           position="absolute"
@@ -129,6 +134,7 @@ export default function Home() {
           display="flex"
           flexDirection="column"
           gap={3}
+          width={isMobile ? '90%' : '400px'}
         >
           <Typography variant="h6">Add Item</Typography>
           <Stack width="100%" direction="row" spacing={2}>
@@ -152,9 +158,9 @@ export default function Home() {
         </Box>
       </Modal>
 
-      <Box border="1px solid #333" mb={3}>
+      {/* Pantry Section */}
+      <Box border="1px solid #333" mb={3} width={isMobile ? '100%' : '800px'}>
         <Box
-          width="800px"
           height="100px"
           bgcolor="#ADD8E6"
           alignItems="center"
@@ -162,7 +168,7 @@ export default function Home() {
           display="flex"
           paddingX={2}
         >
-          <Typography variant="h2" color='#333'>Pantry</Typography>
+          <Typography variant={isMobile ? "h5" : "h2"} color='#333'>Pantry</Typography>
           <Stack direction="row" spacing={1}>
             <IconButton onClick={handleOpen}>
               <AddIcon />
@@ -173,7 +179,7 @@ export default function Home() {
           </Stack>
         </Box>
         {searchVisible && (
-          <Box width="800px" padding={2}>
+          <Box padding={2}>
             <TextField
               fullWidth
               variant="outlined"
@@ -183,7 +189,7 @@ export default function Home() {
             />
           </Box>
         )}
-        <Stack width="800px" height="300px" spacing={2} overflow="auto">
+        <Stack width="100%" height={isMobile ? '200px' : '300px'} spacing={2} overflow="auto">
           {filteredInventory.map(({ name, quantity }) => (
             <Box
               key={name}
@@ -193,12 +199,12 @@ export default function Home() {
               alignItems="center"
               justifyContent="space-between"
               bgcolor="#f0f0f0"
-              padding={5}
+              padding={isMobile ? 3 : 5}
             >
-              <Typography variant='h3' color='#333' textAlign="center">
+              <Typography variant={isMobile ? 'h5' : 'h3'} color='#333' textAlign="center">
                 {name.charAt(0).toUpperCase() + name.slice(1)}
               </Typography>
-              <Typography variant='h3' color='#333' textAlign="center">
+              <Typography variant={isMobile ? 'h5' : 'h3'} color='#333' textAlign="center">
                 {quantity}
               </Typography>
               <Stack direction="row" spacing={2}>
@@ -224,13 +230,15 @@ export default function Home() {
         </Stack>
       </Box>
 
+      {/* Button to generate the recipe */}
       <Button variant="contained" onClick={generateRecipe} disabled={loading}>
         {loading ? "Generating..." : "Generate Recipe"}
       </Button>
 
+      {/* Recipe Sidebar */}
       <Drawer anchor="right" open={isDrawerOpen} onClose={toggleDrawer(false)}>
         <Box
-          width="400px"
+          width={isMobile ? '300px' : '400px'}
           height="100%"
           p={3}
           bgcolor="#f9f9f9"
