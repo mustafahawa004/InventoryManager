@@ -15,7 +15,6 @@ export default function Home() {
   const [searchVisible, setSearchVisible] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false); 
   
-  // useMediaQuery to check screen size (for responsive design)
   const isMobile = useMediaQuery('(max-width: 768px)'); 
 
   const updateInventory = async () => {
@@ -122,41 +121,45 @@ export default function Home() {
     >
       {/* Modal for Adding Item */}
       <Modal open={open} onClose={handleClose}>
-        <Box
-          position="absolute"
-          top="50%"
-          left="50%"
-          transform="translate(-50%, -50%)"
-          bgcolor="white"
-          border="2px solid black"
-          boxShadow={24}
-          p={4}
-          display="flex"
-          flexDirection="column"
-          gap={3}
-          width={isMobile ? '90%' : '400px'}
-        >
-          <Typography variant="h6">Add Item</Typography>
-          <Stack width="100%" direction="row" spacing={2}>
-            <TextField
-              variant="outlined"
-              fullWidth
-              value={itemName}
-              onChange={(e) => setItemName(e.target.value)}
-            />
-            <Button
-              variant="outlined"
-              onClick={() => {
-                addItem(itemName);
-                setItemName('');
-                handleClose();
-              }}
-            >
-              Add
-            </Button>
-          </Stack>
-        </Box>
-      </Modal>
+  <Box
+    position="absolute"
+    top="30%"
+    left="10%"
+    transform="translate(-50%, -50%)"
+    bgcolor="white"
+    border="2px solid black"
+    boxShadow={24}
+    p={4}
+    display="flex"
+    flexDirection="column"
+    gap={3}
+    width={isMobile ? '80%' : '400px'}
+    maxWidth="90vw"
+    maxHeight="90vh"
+    overflow="auto"
+  >
+    <Typography variant="h6" textAlign="center">Add Item</Typography>
+    <Stack width="100%" direction="row" spacing={2}>
+      <TextField
+        variant="outlined"
+        fullWidth
+        value={itemName}
+        onChange={(e) => setItemName(e.target.value)}
+      />
+      <Button
+        variant="outlined"
+        onClick={() => {
+          addItem(itemName);
+          setItemName('');
+          handleClose();
+        }}
+      >
+        Add
+      </Button>
+    </Stack>
+  </Box>
+</Modal>
+
 
       {/* Pantry Section */}
       <Box border="1px solid #333" mb={3} width={isMobile ? '100%' : '800px'}>
